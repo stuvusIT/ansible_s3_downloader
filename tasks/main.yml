@@ -1,2 +1,56 @@
 ---
 
+- name: Install Dependencies
+  apt:
+    name:
+      - curl
+      - jq
+      - awscli
+    state: present
+
+- name: Install modern rclone for STS support
+  block:
+    - name: Fetch the latest official rclone release
+      ansible.builtin.get_url:
+        url: https://downloads.rclone.org/rclone-current-linux-amd64.deb
+        dest: /tmp/rclone-current-linux-amd64.deb
+        mode: '0644'
+
+    - name: Install the rclone package directly
+      ansible.builtin.apt:
+        deb: /tmp/rclone-current-linux-amd64.deb
+        state: present
+
+
+- name: Template s3-download.sh
+  template:
+    src: download-s3.sh
+    dest: /usr/local/bin/s3-download.sh
+    mode: 0755
+    owner: root
+    group: root
+
+- name: Place s3-download systemd service
+  copy:
+    src: s3-download.service
+    dest: /etc/systemd/system/s3-download.service
+  notify: Reload systemd configuration
+
+- name: Place s3-download.timer
+  template:
+    src: s3-download.timer.j2
+    dest: /etc/systemd/system/s3-download.timer
+  notify: Reload systemd configuration
+
+- meta: flush_handlers
+
+- name: Enable s3-download service
+  service:
+    name: s3-download.service
+    enabled: True
+
+- name: Enable s3-download timer
+  service:
+    name: s3-download.timer
+    enabled: True
+    state: started

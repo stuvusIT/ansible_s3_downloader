@@ -1,36 +1,48 @@
-# Role Name
+# s3_downloader
 
-A brief description of the role goes here.
-
+Ansible role to install dependencies and configure a script (`download-s3.sh`) to download/sync S3 buckets to local ZFS datasets using `rclone` and the AWS CLI.
 
 ## Requirements
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here.
-For instance, if the role uses the EC2 module or depends on other Ansible roles, it may be a good idea to mention in this section that the boto package is required.
+The role relies on the following tools (the role installs most of them automatically):
+- `curl`
+- `jq`
+- `rclone`
+- `awscli`
+- `zfs` (ZFS must be configured on the host system to allow creating datasets).
 
+The basic assumption is that a root dataset exists already.
+One child per bucket is then created automatically and snapshots are taken after the sync is complete.
 
 ## Role Variables
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role.
-Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+Settable variables for this role are found in `defaults/main.yml`.
 
-Don't forget to indent the markdown table so it is readable even if not rendered.
-
-| Name       | Required/Default         | Description                                                                                        |
-|------------|:------------------------:|----------------------------------------------------------------------------------------------------|
-| `example1` | :heavy_check_mark:       | Lorem ipsum dolor sit amet, consetetur sadipscing elitr,                                           |
-| `example2` | :heavy_multiplication_x: | Sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. |
-| `example3` | `True`                   | Stet clita kasd gubergren                                                                          |
-| `example4` | `5`                      | No sea takimata sanctus est Lorem ipsum dolor sit amet.                                            |
-
+| Name                         | Required/Default         | Description                                                                            |
+| ---------------------------- | ------------------------ | -------------------------------------------------------------------------------------- |
+| `s3_endpoint`                | `https://s3.example.com` | The S3 API endpoint URL.                                                               |
+| `s3_parent_dataset`          | `backups/s3`             | The parent ZFS dataset where buckets will be downloaded.                               |
+| `s3_aws_access_key_id`       | `dummy`                  | The AWS access key ID for authentication.                                              |
+| `s3_aws_secret_key`          | `dummy`                  | The AWS secret key for authentication.                                                 |
+| `s3_download_timer_schedule` | `daily`                  | Schedule for the systemd timer (e.g. `daily`, `weekly`, or systemd OnCalendar format). |
+| `s3_excluded_buckets`        | `[]`                     | A list of bucket names to exclude from the download processes.                         |
 
 ## Example
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
 ```yml
+- hosts: backup-server
+  roles:
+    - role: s3_downloader
+      vars:
+        s3_endpoint: "https://s3.your-domain.com"
+        s3_parent_dataset: "tank/backups/s3"
+        s3_aws_access_key_id: "your-access-key"
+        s3_aws_secret_key: "your-secret-key"
+        s3_download_timer_schedule: "*-*-* 02:00:00"
+        s3_excluded_buckets:
+          - ignore-bucket-1
+          - ignore-bucket-2
 ```
-
 
 ## License
 
@@ -39,4 +51,4 @@ This work is licensed under the [MIT License](./LICENSE).
 
 ## Author Information
 
-- [Author Name (nickname)](github profile) _givenname.familyname at stuvus.uni-stuttgart.de_
+- [Sven Feyerabend](https://github.com/SF2311) _sven.feyerabend @ stuvus.uni-stuttgart.de_

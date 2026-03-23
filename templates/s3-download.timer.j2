@@ -1,0 +1,9 @@
+[Unit]
+Description=Starts nightly download of objects from ceph
+
+[Timer]
+OnCalendar={{ s3_download_timer_schedule }}
+Unit=s3-download.service
+
+[Install]
+WantedBy=timers.target
