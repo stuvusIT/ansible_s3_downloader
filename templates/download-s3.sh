@@ -10,6 +10,9 @@ readonly API_ENDPOINT="{{ s3_endpoint }}"
 readonly TRANSFERS="${TRANSFERS:-8}"
 readonly CHECKERS="${CHECKERS:-16}"
 
+# Force rclone to run without any configuration file on disk
+export RCLONE_CONFIG="/dev/null"
+
 export RCLONE_CONFIG_REMOTE_TYPE=s3
 export RCLONE_CONFIG_REMOTE_PROVIDER=Other
 export RCLONE_CONFIG_REMOTE_ENDPOINT="{{ s3_endpoint }}"
@@ -103,7 +106,7 @@ create_zfs_dataset() {
 
 create_zfs_snapshot() {
     local dataset_name="$1"
-    local snapshot_name="zrepl_local_$(date --iso-8601=seconds --utc | sed 's/[:+]/_/g')"
+    local snapshot_name="{{ s3_snapshot_name_format }}"
 
     log_msg "info" "Creating snapshot: ${dataset_name}@${snapshot_name}"
 
@@ -137,7 +140,8 @@ download_bucket() {
 # --- Main Execution Flow ---
 main() {
     # Lock to prevent concurrent runs
-    exec {lock_fd}<>/var/lock/download-s3.lock
+    local lock_dir="${RUNTIME_DIRECTORY:-/var/lock}"
+    exec {lock_fd}<>"${lock_dir}/download-s3.lock"
     if ! flock -n -x "${lock_fd}"; then
         log_msg "err" "Another instance of the script is already running. Exiting."
         exit 0

@@ -21,18 +21,24 @@
         deb: /tmp/rclone-current-linux-amd64.deb
         state: present
 
+- name: Create s3-download user and group
+  user:
+    name: s3-download
+    system: yes
+    shell: /usr/sbin/nologin
+
 
 - name: Template s3-download.sh
   template:
     src: download-s3.sh
     dest: /usr/local/bin/s3-download.sh
     mode: 0755
-    owner: root
-    group: root
+    owner: s3-download
+    group: s3-download
 
 - name: Place s3-download systemd service
-  copy:
-    src: s3-download.service
+  template:
+    src: s3-download.service.j2
     dest: /etc/systemd/system/s3-download.service
   notify: Reload systemd configuration
 
@@ -54,3 +60,35 @@
     name: s3-download.timer
     enabled: True
     state: started
+
+- name: List zpools on the system
+  ansible.builtin.command: zpool list -H -o name
+  register: zfs_pools
+  changed_when: false
+  failed_when: false
+
+- name: Check if pool with correct name exists
+  ansible.builtin.set_fact:
+    pool_exists: "{{ s3_parent_dataset.split('/')[0] in zfs_pools.stdout_lines }}"
+
+- name: Fail if parent dataset's pool does not exist
+  ansible.builtin.fail:
+    msg: "The parent dataset's pool does not exist. Please create the pool before running this role."
+  when: not pool_exists
+
+- name: Check if parent dataset exists
+  ansible.builtin.command: "zfs list -H -o name {{ s3_parent_dataset }}"
+  register: zfs_dataset_check
+  changed_when: false
+  failed_when: false
+  when: pool_exists
+
+- name: Create parent dataset if it does not exist
+  ansible.builtin.command: "zfs create -p {{ s3_parent_dataset }}"
+  when: pool_exists and zfs_dataset_check.rc != 0
+
+- name: Allow dataset creation and snapshots for s3-download user
+  ansible.builtin.command: "zfs allow s3-download create,snapshot,mount {{ s3_parent_dataset }}"
+  when: pool_exists
+  # Avoiding unnecessary changed state on subsequent runs
+  changed_when: false

@@ -1,7 +1,7 @@
 ---
 galaxy_info:
   author: Sven Feyerabend
-  description: Sets up a script that downloads the content of a Ceph RGW-backed object store
+  description: Sets up a script that lists buckets and downloads the content of a Ceph RGW-backed object store
   company: stuvus (https://stuvus.uni-stuttgart.de)
 
   license: MIT

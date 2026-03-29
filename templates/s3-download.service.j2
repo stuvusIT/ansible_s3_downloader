@@ -1,0 +1,23 @@
+[Unit]
+Description=Download Content of Object Storage from Ceph
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/s3-download.sh
+StandardOutput=journal
+User=s3-download
+Group=s3-download
+
+# Harden the service
+NoNewPrivileges=true
+PrivateTmp=true
+ReadOnlyPaths=/usr/local/bin/s3-download.sh
+RuntimeDirectory=s3-download
+ReadWritePaths=/{{s3_parent_dataset}}
+ProtectSystem=strict
+ProtectHome=true
+MemoryDenyWriteExecute=true
+MountFlags=shared
+
+[Install]
+WantedBy=multi-user.target

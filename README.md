@@ -2,6 +2,8 @@
 
 Ansible role to install dependencies and configure a script (`download-s3.sh`) to download/sync S3 buckets to local ZFS datasets using `rclone` and the AWS CLI.
 
+For managing snapshot retention or replication to another host [stuvusIT/ansible_zrepl](https://github.com/stuvusIT/ansible_zrepl) can be used.
+
 ## Requirements
 
 The role relies on the following tools (the role installs most of them automatically):
@@ -11,8 +13,14 @@ The role relies on the following tools (the role installs most of them automatic
 - `awscli`
 - `zfs` (ZFS must be configured on the host system to allow creating datasets).
 
-The basic assumption is that a root dataset exists already.
-One child per bucket is then created automatically and snapshots are taken after the sync is complete.
+The basic assumption is that a zpool exists already, the datasets are created by the script as needed.
+One child dataset per bucket is created automatically if needed and snapshots are taken after the sync is complete.
+
+### Permissions
+
+The script makes use of the Ceph RGW AdminOps API to list all buckets, so `--caps buckets=read` has to be granted to the user.
+Additionally, a role needs to be created to allow access to the content of all buckets.
+The script uses the [STS](https://docs.ceph.com/en/squid/radosgw/STS/) support in Ceph RGW to assume this role and access the objects.
 
 ## Role Variables
 
