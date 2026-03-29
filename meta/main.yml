@@ -1,7 +1,7 @@
 ---
 galaxy_info:
-  author: Insert author(s) here
-  description: Insert description here
+  author: Sven Feyerabend
+  description: Sets up a script that lists buckets and downloads the content of a Ceph RGW-backed object store
   company: stuvus (https://stuvus.uni-stuttgart.de)
 
   license: MIT
@@ -11,9 +11,11 @@ galaxy_info:
   platforms:
     - name: Debian
       versions:
-        - buster
+        - trixie
 
   galaxy_tags:
-    - Insert ansible galaxy tags here
+    - backup
+    - s3
+    - Ceph
 
 dependencies: []

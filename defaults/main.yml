@@ -1,0 +1,7 @@
+s3_endpoint: https://s3.example.com
+s3_parent_dataset: backups/s3
+s3_aws_access_key_id: dummy
+s3_aws_secret_key: dummy
+s3_download_timer_schedule: daily
+s3_excluded_buckets: []
+s3_snapshot_name_format: "s3-download-$(date --iso-8601=seconds --utc | sed 's/[:+]/_/g')"
